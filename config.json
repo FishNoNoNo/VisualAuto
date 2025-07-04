@@ -107,6 +107,8 @@
         }
     ],
     "cycle": {
-        "ifCycle": false
-    }
+        "ifCycle": true,
+        "interval": 5
+    },
+    "pause": 1
 }

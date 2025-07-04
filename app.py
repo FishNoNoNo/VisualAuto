@@ -1,6 +1,8 @@
 import threading
 from flask import Flask, jsonify, render_template, request
 import json
+
+import keyboard
 from action import Action
 
 
@@ -41,8 +43,14 @@ def start():
     config={}
     with open('config.json','r',encoding='utf-8') as f:
         config=json.load(f)
-    action=Action(pause=1,config=config)
+    action=Action(config=config)
+    def on_esc():
+        print("尝试停止任务...")
+        if action:
+            action.stop()
 
+    # 添加热键监听
+    keyboard.add_hotkey('ctrl+1', on_esc)
     thread = threading.Thread(
         target=action.main, daemon=True
     )

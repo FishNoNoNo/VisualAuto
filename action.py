@@ -1,7 +1,6 @@
-import sys
+import time
 import pyautogui as pg
 import pyperclip
-import keyboard
 
 """ 
 TYPE
@@ -18,13 +17,18 @@ TYPE
 
 
 class Action:
-    def __init__(self, pause=1, config=None):
-        self.pause = pause
+    def __init__(self, config=None):
         self.config = config
+        self.stop_flag=False
 
-    def ac(self,actions):
-        pg.PAUSE=self.pause
+    def stop(self):
+        self.stop_flag = True
+
+    def ac(self,actions,pause):
+        pg.PAUSE=pause
         for action in actions:
+            if self.stop_flag:
+                return
             acType = action["type"]
             params = action["params"]
             x = params.get("x")
@@ -62,24 +66,24 @@ class Action:
                 raise Exception("未知操作")
 
     def main(self):
-        def on_exit():
-            keyboard.unhook_all()
-            sys.exit()
-
-        keyboard.add_hotkey('esc',on_exit)
-
         config = self.config
 
         actions = config["actions"]
 
         cycle = config["cycle"]
 
-        ifCycle = cycle["ifCycle"]
+        ifCycle = cycle.get("ifCycle")
+
+        interval=cycle.get('interval')
+
+        pause=config.get('pause')
 
         while True:
             try:
-                self.ac(actions)
+                self.ac(actions=actions,pause=pause)
             except Exception as e:
                 print(e)
-            if not ifCycle:
+            if not ifCycle or self.stop_flag:
                 break
+            else:
+                time.sleep(interval)
