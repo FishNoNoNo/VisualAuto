@@ -1,0 +1,112 @@
+{
+    "actions": [
+        {
+            "type": 3,
+            "params": {
+                "type": "3",
+                "x": 364,
+                "y": 61,
+                "clicks": null,
+                "interval": null,
+                "duration": null,
+                "button": "LEFT"
+            }
+        },
+        {
+            "type": 3,
+            "params": {
+                "type": "3",
+                "x": 410,
+                "y": 150,
+                "clicks": null,
+                "interval": null,
+                "duration": null,
+                "button": "LEFT"
+            }
+        },
+        {
+            "type": 4,
+            "params": {
+                "type": "4",
+                "text": "3344927962",
+                "interval": 0.2
+            }
+        },
+        {
+            "type": 6,
+            "params": {
+                "type": "6",
+                "key": "enter",
+                "presses": null,
+                "interval": null
+            }
+        },
+        {
+            "type": 3,
+            "params": {
+                "type": "3",
+                "x": 1713,
+                "y": 552,
+                "clicks": null,
+                "interval": null,
+                "duration": null,
+                "button": "LEFT"
+            }
+        },
+        {
+            "type": 3,
+            "params": {
+                "type": "3",
+                "x": 1265,
+                "y": 655,
+                "clicks": null,
+                "interval": null,
+                "duration": null,
+                "button": "LEFT"
+            }
+        },
+        {
+            "type": 7,
+            "params": {
+                "type": "7",
+                "keys": "ctrl,a",
+                "interval": 0.2
+            }
+        },
+        {
+            "type": 5,
+            "params": {
+                "type": "5",
+                "interval": 0.2,
+                "msg": "测试"
+            }
+        },
+        {
+            "type": 3,
+            "params": {
+                "type": "3",
+                "x": 1312,
+                "y": 1075,
+                "clicks": null,
+                "interval": null,
+                "duration": null,
+                "button": "LEFT"
+            }
+        },
+        {
+            "type": 3,
+            "params": {
+                "type": "3",
+                "x": 1770,
+                "y": 244,
+                "clicks": null,
+                "interval": null,
+                "duration": null,
+                "button": "LEFT"
+            }
+        }
+    ],
+    "cycle": {
+        "ifCycle": false
+    }
+}

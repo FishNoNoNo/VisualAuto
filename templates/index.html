@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>配置 JSON 参数</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f3f7;
+            margin: 0;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        h2 {
+            color: #1a73e8;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+
+        label {
+            display: inline-block;
+            /* width: 90px; */
+            font-weight: 500;
+            min-width: auto;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        textarea,
+        select {
+            width: auto;
+            /* Adjusted to take remaining space */
+            max-width: 100%;
+            padding: 8px 12px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        .action {
+            display: flex;
+            flex-direction: column;
+            /* align-items: center; */
+
+            /* flex-wrap: wrap; */
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            justify-content: flex-start;
+            max-width: 100%;
+        }
+
+        .action>* {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .params-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            max-width: 100%;
+        }
+
+        .params-container input,
+        .params-container select {
+            min-width: auto;
+            /* 取消固定宽度 */
+            flex-grow: 1;
+            /* 让输入框可以增长以填充剩余空间 */
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        strong {
+            min-width: 60px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button[type="button"] {
+            background-color: #1a73e8;
+            color: white;
+        }
+
+        button[type="button"]:hover {
+            background-color: #155ea1;
+        }
+
+        [type="submit"],
+        [type="button"] {
+            margin-top: 20px;
+        }
+
+        #msg {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .btn-group {
+            text-align: center;
+        }
+
+        input[type="number"] {
+            width: 80px;
+            /* Make number inputs smaller */
+            padding: 6px 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>配置 JSON 参数</h2>
+        <form id="configForm" class="section">
+            <div class="section-title">动作设置</div>
+            <div id="actionsContainer" class="actionsContainer">
+
+            </div>
+            <div class="btn-group">
+                <button type="button" onclick="addAction()">+ 添加操作</button>
+            </div>
+
+            <div class="cycle">
+                <label>
+                    <input type="checkbox" id="cycleCheckbox" />
+                    是否循环
+                </label>
+
+                <label>循环间隔时间（秒）：</label>
+                <input type="number" id="cycleInterval" placeholder="例如:5" />
+            </div>
+
+            <div class="btn-group">
+                <button type="button" onclick="saveConfig()">保存配置</button>
+                <button type="button" onclick="startAction()">开始</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const actionsContainer = document.getElementById('actionsContainer');
+
+        const actionTypes = {
+            1: { label: "鼠标移动", params: ["x", "y", "duration"] },
+            2: { label: "鼠标拖拽", params: ["x", "y", "duration", "button"] },
+            3: { label: "鼠标点击", params: ["x", "y", "clicks", "interval", "duration", "button"] },
+            4: { label: "输入字符", params: ["text", "interval"] },
+            5: { label: "粘贴中文", params: ["interval", "msg"] },
+            6: { label: "按键操作", params: ["key", "presses", "interval"] },
+            7: { label: "热键操作", params: ["keys", "interval"] },
+            8: { label: "截屏操作", params: ["path"] },
+        };
+
+        let actionCount = 0;
+
+        function addAction() {
+            actionCount++;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'action';
+            wrapper.dataset.index = actionCount;
+            wrapper.id = `action_${actionCount}`;
+
+            const optionsHTML = Object.entries(actionTypes).map(([key, val]) => {
+                return `<option value="${key}">${val.label}</option>`;
+            }).join('');
+
+            wrapper.innerHTML = `
+            <strong>操作_${actionCount}</strong>
+            <div>
+                <label>类型:</label>
+                <select name="type" onchange="updateActionFields(${actionCount})" style="width: 150px;">
+                    ${optionsHTML}
+                </select>    
+            </div>
+            
+            <div class="params-container" id="params_${actionCount}"></div>
+            <button type="button" onclick="removeAction(${actionCount})">删除</button>
+        `;
+
+            actionsContainer.appendChild(wrapper);
+
+            updateActionFields(actionCount); // 初始化参数字段
+        }
+
+        function removeAction(index) {
+            const el = document.getElementById(`action_${index}`);
+            if (el) {
+                el.remove();
+            }
+
+            // 获取当前所有 .action 元素
+            const allActions = Array.from(document.querySelectorAll('#actionsContainer > .action'));
+
+            // 重新排序并更新每个元素
+            allActions.forEach((item, newIndex) => {
+                const updatedIndex = newIndex + 1;
+
+                // 更新 data-index 属性
+                item.dataset.index = updatedIndex;
+
+                // 更新 id
+                item.id = `action_${updatedIndex}`;
+
+                // 更新 strong 标签内容
+                const strongEl = item.querySelector('strong');
+                if (strongEl) {
+                    strongEl.textContent = `操作_${updatedIndex}`;
+                }
+
+                // 更新 select 的 onchange 绑定的 index
+                const typeSelect = item.querySelector('select[name="type"]');
+                if (typeSelect) {
+                    typeSelect.setAttribute('onchange', `updateActionFields(${updatedIndex})`);
+                }
+
+                const deleteEl = item.querySelector('button');
+                if (deleteEl) {
+                    deleteEl.setAttribute('onclick', `removeAction(${updatedIndex})`);
+                }
+
+                // 更新 params-container 的 id
+                const paramsContainer = item.querySelector('.params-container');
+                if (paramsContainer) {
+                    paramsContainer.id = `params_${updatedIndex}`;
+                }
+            });
+
+            // 最后更新 actionCount
+            actionCount = allActions.length;
+        }
+
+        function updateActionFields(index) {
+            const select = document.querySelector(`#action_${index} select[name="type"]`);
+            const type = parseInt(select.value, 10);
+            const container = document.getElementById(`params_${index}`);
+            container.innerHTML = '';
+
+            const fields = actionTypes[type].params;
+
+            fields.forEach(param => {
+                let inputHtml = '';
+                switch (param) {
+                    case 'x':
+                    case 'y':
+                    case 'duration':
+                    case 'clicks':
+                    case 'interval':
+                    case 'presses':
+                        inputHtml = `<input type="number" name="${param}" placeholder="${param.toUpperCase()}" />`;
+                        break;
+                    case 'text':
+                    case 'msg':
+                    case 'path':
+                        inputHtml = `<input type="text" name="${param}" placeholder="${param.charAt(0).toUpperCase() + param.slice(1)}" style="width: 150px;" />`;
+                        break;
+                    case 'button':
+                        inputHtml = `<select name="${param}" style="width: 150px;">
+                                <option value="LEFT">左键</option>
+                                <option value="RIGHT">右键</option>
+                                <option value="MIDDLE">中键</option>
+                             </select>`;
+                        break;
+                    case 'keys':
+                        inputHtml = `<input type="text" name="${param}" placeholder="逗号分隔的键名" style="width: 150px;" />`;
+                        break;
+                    case 'key':
+                        inputHtml = `<input type="text" name="${param}" placeholder="单个键名" style="width: 150px;" />`;
+                        break;
+                }
+
+                container.innerHTML += `
+                <label>${param}</label>
+                ${inputHtml}
+            `;
+            });
+        }
+
+        function saveConfig() {
+            const actions = [];
+            const cycle = {};
+
+            document.querySelectorAll('#actionsContainer > .action').forEach((item, index) => {
+                const indexStr = item.dataset.index;
+                const typeSelect = item.querySelector('select[name="type"]');
+                const type = parseInt(typeSelect.value);
+
+                const params = {};
+                const inputs = item.querySelectorAll('input, select');
+
+                inputs.forEach(input => {
+                    const name = input.name;
+                    const value = input.type === 'number' ? parseFloat(input.value) : input.value;
+
+                    if (name) {
+                        params[name] = value;
+                    }
+                });
+
+                actions.push({
+                    type,
+                    params
+                });
+            });
+
+            const cycleCheckbox = document.getElementById('cycleCheckbox');
+            const intervalInput = document.getElementById('cycleInterval');
+
+            cycle.ifCycle = cycleCheckbox.checked;
+            cycle.interval = cycle.ifCycle && intervalInput.value ? parseFloat(intervalInput.value) : undefined;
+
+
+
+            const data = {
+                actions: actions,
+                cycle: cycle
+            };
+
+            console.log('保存的配置:', data);
+
+            fetch('/api/save-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('保存失败');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    // alert('配置保存成功！');
+                    console.log('服务器响应:', result);
+                })
+                .catch(error => {
+                    alert('保存配置时发生错误：' + error.message);
+                    console.error('错误详情:', error);
+                });
+        }
+
+        function startAction() {
+
+            // 示例：发送 POST 请求到 /api/start 接口
+            fetch('/api/start')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('请求失败');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('服务器响应:', result);
+                })
+                .catch(error => {
+                    console.error('错误详情:', error);
+                    alert('发生错误，请查看控制台日志。');
+                });
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            const cycleCheckbox = document.getElementById('cycleCheckbox');
+            const cycleInterval = document.getElementById('cycleInterval');
+
+            // 加载配置
+            fetch('/api/config')
+                .then(response => {
+                    if (!response.ok) throw new Error('网络响应失败');
+                    return response.json();
+                })
+                .then(config => {
+                    // 设置循环选项
+                    if (config.cycle && config.cycle.ifCycle === true) {
+                        cycleCheckbox.checked = true;
+                        cycleInterval.disabled = false;
+                        if (config.cycle.interval !== undefined && config.cycle.interval !== null) {
+                            cycleInterval.value = config.cycle.interval;
+                        }
+                    } else {
+                        cycleCheckbox.checked = false;
+                        cycleInterval.disabled = true;
+                    }
+
+                    // 初始化 actions
+                    if (Array.isArray(config.actions)) {
+                        config.actions.forEach((action, index) => {
+                            addAction(); // 使用已有函数添加 action
+                            const currentIndex = index + 1; // 因为 actionCount 是从 1 开始的
+                            const select = document.querySelector(`#action_${currentIndex} select[name="type"]`);
+                            if (select) {
+                                select.value = action.type; // 设置类型
+                                updateActionFields(currentIndex); // 更新参数容器
+
+                                // 等待 DOM 更新后再填充具体值
+                                setTimeout(() => {
+                                    fillParams(currentIndex, action.params);
+                                }, 0);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载配置失败:', error);
+                    alert('加载配置失败，请刷新重试');
+                });
+        });
+
+        // 填充指定 action 的参数字段
+        function fillParams(index, params) {
+            const container = document.getElementById(`params_${index}`);
+            if (!container || !params) return;
+
+            Object.keys(params).forEach(key => {
+                const input = container.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.tagName === 'SELECT') {
+                        const value = String(params[key]).toUpperCase();
+                        input.value = value;
+                    } else if (input.type === 'number') {
+                        input.value = params[key] !== null && params[key] !== undefined ? parseFloat(params[key]) : '';
+                    } else {
+                        input.value = params[key] !== null && params[key] !== undefined ? params[key] : '';
+                    }
+                }
+            });
+        }
+
+        
+    </script>
+
+</body>
+
+</html>
